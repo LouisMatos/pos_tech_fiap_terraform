@@ -20,6 +20,12 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -no-color
         continue-on-error: true
+    
+      - name: Set output
+        id: step1
+        run: echo "OUTPUT_NAME=value" >> $GITHUB_ENV
+      - name: Use output
+        run: echo "The output was ${{ env.OUTPUT_NAME }}"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
