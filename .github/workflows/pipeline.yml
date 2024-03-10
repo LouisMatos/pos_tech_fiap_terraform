@@ -8,13 +8,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
+
       - name: AWS Plan Copy
         id: copyfrom
         run: aws s3 cp s3://terraformestado/jlapp-prd.tfstate jlapp-prod.tfstate
-        env:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
         continue-on-error: true
 
       - name: Terraform Plan
@@ -30,7 +36,7 @@ jobs:
     
       - name: AWS Plan Copy
         if: github.event_name == 'push' && steps.apply.outcome == 'success'
-        run: aws s3 cp terraform.tfstate s3://your-bucket/yourapp-${{ env.ENVIRONMENT }}.tfstate
+        run: aws s3 cp terraform.tfstate s3://terraformestado/jlapp-prd.tfstate
         id: copy
         env:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
