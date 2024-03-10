@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: AWS Plan Copy
         id: copyfrom
-        run: aws s3 cp s3://terraformestado/jlapp-${{ env.ENVIRONMENT }}.tfstate jlapp-${{ env.ENVIRONMENT }}.tfstate
+        run: aws s3 cp s3://terraformestado/jlapp-prd.tfstate jlapp-prod.tfstate
         env:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
