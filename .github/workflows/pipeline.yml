@@ -4,12 +4,9 @@ on:
   push:
     branches:
       - '*'
-  pull_request:
-    types: [closed]
       
 jobs:
-
-  terraform_plan:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,37 +36,12 @@ jobs:
         id: plan
         run: terraform plan 
 
-      - name: Upload terraform.tfstate
-        uses: actions/upload-artifact@v2
-        with:
-          name: terraform.tfstate
-          path: terraform.tfstate
-
-
-  deploy_infra:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
-    needs: terraform_plan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Download terraform.tfstate
-        uses: actions/download-artifact@v2
-        with:
-          name: terraform.tfstate
-          path: .
-
       - name: Terraform Apply
         id: apply
+        if: github.event_name == 'push'
         run: terraform apply -auto-approve
+    
+      - name: AWS Plan Copy
+        if: github.event_name == 'push' && steps.apply.outcome == 'success'
+        run: aws s3 cp terraform.tfstate s3://terraformestado/terraform.tfstate
+        id: copy
