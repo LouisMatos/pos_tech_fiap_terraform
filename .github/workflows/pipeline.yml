@@ -58,6 +58,7 @@ jobs:
 
   deploy_infra:
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+    needs: create_pull_request
     runs-on: ubuntu-latest
     steps:
       - name: Terraform Apply
