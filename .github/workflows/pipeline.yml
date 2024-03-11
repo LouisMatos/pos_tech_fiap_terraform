@@ -1,21 +1,20 @@
-name: Terraform CI/CD
+name: Pipeline Terraform AWS infraestrutura Kubernetes
 
 on:
   push:
     branches:
-      - master
+      - '*'
+  pull_request:
+    types: [closed]
       
 jobs:
-  checkout:
+
+  terraform_plan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-  configure_aws:
-    needs: checkout
-    runs-on: ubuntu-latest
-    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -23,17 +22,9 @@ jobs:
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ secrets.AWS_REGION }}
 
-  terraform_init:
-    needs: configure_aws
-    runs-on: ubuntu-latest
-    steps:
       - name: Terraform Init
         run: terraform init
 
-  aws_plan_copy:
-    needs: terraform_init
-    runs-on: ubuntu-latest
-    steps:
       - name: AWS Plan Copy
         id: copyfrom
         run: |
@@ -44,17 +35,30 @@ jobs:
             echo "terraform.tfstate does not exist in the S3 bucket"
           fi
 
-  terraform_plan:
-    needs: aws_plan_copy
-    runs-on: ubuntu-latest
-    steps:
       - name: Terraform Plan
         id: plan
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }} // Plan creation is required both on pull_request, push
         run: terraform plan 
 
-  terraform_apply:
+  create_pull_request:
     needs: terraform_plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update Terraform configuration with commit ${{ github.sha }}"
+          title: "Update Terraform configuration"
+          body: "This PR updates the Terraform configuration."
+          branch: "update-terraform-configuration-${{ github.run_number }}"
+          base: "master"
+
+  deploy_infra:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+    needs: create_pull_request
     runs-on: ubuntu-latest
     steps:
       - name: Terraform Apply
