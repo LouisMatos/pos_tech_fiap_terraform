@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - '*'
+  pull_request:
+    types: [closed]
       
 jobs:
 
@@ -48,15 +50,14 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "${{ github.sha }}"
-          title: "PR: Terraform Plan"
-          body: "PR: Terraform Plan"
-          branch: "${{ github.head_ref }}"
+          commit-message: "Update Terraform configuration with commit ${{ github.sha }}"
+          title: "Update Terraform configuration"
+          body: "This PR updates the Terraform configuration."
+          branch: "update-terraform-configuration-${{ github.run_number }}"
           base: "master"
 
   deploy_infra:
-    needs: terraform_plan
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
     runs-on: ubuntu-latest
     steps:
       - name: Terraform Apply
