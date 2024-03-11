@@ -1,21 +1,18 @@
-name: Terraform CI/CD
+name: Pipeline Terraform AWS infraestrutura Kubernetes
 
 on:
   push:
     branches:
-      - master
+      - '*'
       
 jobs:
-  checkout:
+
+  terraform_plan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-  configure_aws:
-    needs: checkout
-    runs-on: ubuntu-latest
-    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -23,17 +20,9 @@ jobs:
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ secrets.AWS_REGION }}
 
-  terraform_init:
-    needs: configure_aws
-    runs-on: ubuntu-latest
-    steps:
       - name: Terraform Init
         run: terraform init
 
-  aws_plan_copy:
-    needs: terraform_init
-    runs-on: ubuntu-latest
-    steps:
       - name: AWS Plan Copy
         id: copyfrom
         run: |
@@ -44,17 +33,13 @@ jobs:
             echo "terraform.tfstate does not exist in the S3 bucket"
           fi
 
-  terraform_plan:
-    needs: aws_plan_copy
-    runs-on: ubuntu-latest
-    steps:
       - name: Terraform Plan
         id: plan
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }} // Plan creation is required both on pull_request, push
         run: terraform plan 
 
-  terraform_apply:
+  deploy_infra:
     needs: terraform_plan
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Terraform Apply
