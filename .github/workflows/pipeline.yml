@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - '*'
-  pull_request:
-    types: [closed]
       
 jobs:
 
@@ -39,28 +37,37 @@ jobs:
         id: plan
         run: terraform plan 
 
-  create_pull_request:
+      - name: Upload terraform.tfstate
+        uses: actions/upload-artifact@v2
+        with:
+          name: terraform.tfstate
+          path: terraform.tfstate
+
+
+  deploy_infra:
+    if: github.event_name == 'pull_request' && github.event.pull_request && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
     needs: terraform_plan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update Terraform configuration with commit ${{ github.sha }}"
-          title: "Update Terraform configuration"
-          body: "This PR updates the Terraform configuration."
-          branch: "update-terraform-configuration-${{ github.run_number }}"
-          base: "master"
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ secrets.AWS_REGION }}
 
-  deploy_infra:
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
-    needs: create_pull_request
-    runs-on: ubuntu-latest
-    steps:
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download terraform.tfstate
+        uses: actions/download-artifact@v2
+        with:
+          name: terraform.tfstate
+          path: .
+
       - name: Terraform Apply
         id: apply
         run: terraform apply -auto-approve
