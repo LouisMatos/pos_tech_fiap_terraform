@@ -23,12 +23,12 @@ jobs:
               aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               aws-region: ${{ secrets.AWS_REGION }}
 
-        - name: AWS Plan Copy
-          run: aws s3 cp s3://terraformestado/jlapp-prd.tfstate terraform.tfstate
-          id: copy
-
         - name: Terraform Init
-          run: terraform init
+          run: terraform init     
+
+        - name: AWS Plan Copy
+          run: aws s3 cp s3://terraformestado/terraform.tfstate terraform.tfstate
+          id: copy
 
         - name: Show Destroy plan
           run: terraform plan -destroy
@@ -40,5 +40,5 @@ jobs:
 
         - name: Delete plan file
           if: steps.destroy.outcome == 'success'
-          run: aws s3 rm s3://terraformestado/jlapp-prd.tfstate
+          run: aws s3 rm s3://terraformestado/terraform.tfstate
 
