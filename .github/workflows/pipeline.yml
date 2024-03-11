@@ -37,6 +37,23 @@ jobs:
         id: plan
         run: terraform plan 
 
+  create_pull_request:
+    needs: terraform_plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "${{ github.sha }}"
+          title: "PR: Terraform Plan"
+          body: "PR: Terraform Plan"
+          branch: "${{ github.head_ref }}"
+          base: "master"
+
   deploy_infra:
     needs: terraform_plan
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
