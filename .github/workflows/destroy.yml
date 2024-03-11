@@ -32,7 +32,6 @@ jobs:
 
         - name: Show Destroy plan
           run: terraform plan -destroy
-          continue-on-error: true
 
         - name: Destroy resources jobs
           id: destroy
