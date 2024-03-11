@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - '*'
+  pull_request:
+    types: [closed]
       
 jobs:
 
@@ -45,7 +47,7 @@ jobs:
 
 
   deploy_infra:
-    if: github.event_name == 'pull_request' && github.event.pull_request && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
     needs: terraform_plan
     runs-on: ubuntu-latest
     steps:
