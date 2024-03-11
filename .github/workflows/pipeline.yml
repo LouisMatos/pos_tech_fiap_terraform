@@ -18,19 +18,19 @@ jobs:
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Terraform Init
+        run: terraform init
+
       - name: AWS Plan Copy
         id: copyfrom
         run: |
-          if aws s3 ls s3://terraformestado/jlapp-prd.tfstate > /dev/null 2>&1
+          if aws s3 ls s3://terraformestado/terraform.tfstate > /dev/null 2>&1
           then
-            aws s3 cp s3://terraformestado/jlapp-prd.tfstate jlapp-prod.tfstate
+            aws s3 cp s3://terraformestado/terraform.tfstate terraform.tfstate
           else
-            echo "jlapp-prd.tfstate does not exist in the S3 bucket"
+            echo "terraform.tfstate does not exist in the S3 bucket"
           fi
 
-      - name: Terraform Init
-        run: terraform init
-        
       - name: Terraform Plan
         id: plan
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }} // Plan creation is required both on pull_request, push
@@ -43,7 +43,7 @@ jobs:
     
       - name: AWS Plan Copy
         if: github.event_name == 'push' && steps.apply.outcome == 'success'
-        run: aws s3 cp terraform.tfstate s3://terraformestado/jlapp-prd.tfstate
+        run: aws s3 cp terraform.tfstate s3://terraformestado/terraform.tfstate
         id: copy
 
 
