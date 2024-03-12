@@ -6,7 +6,7 @@ variable "cluster_name" {
 }
 
 variable "desired_size" {
-  default     = 2
+  default     = 1
   description = "O tamanho desejado para o cluster"
   type        = number
 }
@@ -18,7 +18,7 @@ variable "min_size" {
 }
 
 variable "max_size" {
-  default     = 3
+  default     = 1
   description = "O tamanho máximo para o cluster"
   type        = number
 }
