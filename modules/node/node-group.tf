@@ -9,6 +9,8 @@ resource "aws_eks_node_group" "eks_node_group" {
     var.private_subnet_1b
   ]
 
+  instance_types = ["t3.large"]
+
   scaling_config {
     desired_size = var.desired_size
     max_size     = var.max_size
