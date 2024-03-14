@@ -13,9 +13,13 @@ resource "aws_eks_cluster" "eks_cluster" {
       
   }
 
+ # Enable EKS Cluster Control Plane Logging
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_cluster,
-    aws_iam_role_policy_attachment.eks_cluster_service
+    aws_iam_role_policy_attachment.eks_cluster_service,
+    aws_iam_role_policy_attachment.eks-AmazonEKSVPCResourceController
   ]
 
 }
