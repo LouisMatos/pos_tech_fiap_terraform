@@ -1,29 +1,54 @@
 variable "cluster_name" {
     description = "O nome do cluster"
-    type        = string
+    
 }
 
 variable "private_subnet_1a" {
     description = "A subnet privada 1a"
-    type        = string
+    
 }
 
-variable "private_subnet_1b" {
-    description = "A subnet privada 1b"
-    type        = string
+variable "private_subnet_1c" {
+    description = "A subnet privada 1c"
+    
 }
 
-variable "desired_size" {
-  description = "O tamanho desejado para o cluster"
-  type        = number
+variable "aws_region" {
+    description = "A região da AWS"
+    
 }
 
-variable "min_size" {
-  description = "O tamanho mínimo para o cluster"
-  type        = number
+variable "k8s_version" {
+    description = "A versão do Kubernetes"
+    
 }
 
-variable "max_size" {
-  description = "O tamanho máximo para o cluster"
-  type        = number
+variable "cluster_vpc" {
+    description = "A VPC do cluster"
+}
+
+
+variable "eks_cluster" {
+    description = "O nome do cluster"
+    
+}
+
+variable "eks_cluster_sg" {
+    description = "O security group do cluster"
+    
+}
+
+variable "nodes_instances_sizes" {
+    description = "O tamanho das instâncias dos nodes"
+    type        = list(string)
+}
+
+variable "auto_scale_options" { 
+    description = "Opções de auto scale"
+    type        = map
+} 
+
+variable "auto_scale_cpu" {
+    description = "Auto scale por CPU"
+    type        = map
 }

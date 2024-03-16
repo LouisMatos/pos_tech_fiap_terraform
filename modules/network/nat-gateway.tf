@@ -1,32 +1,28 @@
-resource "aws_eip" "eks_eip" {
-  # Remove the deprecated "vpc" attribute
-  
-  tags = {
-    "Name" = format("%s-elastic-ip", var.cluster_name)
-  }
-
+resource "aws_eip" "vpc_iep" {
+    tags = {
+        Name = format("%s-eip", var.cluster_name)
+    }
 }
 
-resource "aws_nat_gateway" "eks_nat_gw" {
-  allocation_id = aws_eip.eks_eip.id
-  subnet_id     = aws_subnet.eks_subnet_public_1a.id
+resource "aws_nat_gateway" "nat" {
+    allocation_id   = aws_eip.vpc_iep.id
+    subnet_id       = aws_subnet.public_subnet_1a.id
 
-  tags = {
-    Name = format("%s-nat-gateway", var.cluster_name)
-  }
-
+    tags = {
+      Name = format("%s-nat-gateway", var.cluster_name)
+    }  
 }
 
-resource "aws_route_table" "eks_nat_rt" {
-  vpc_id = aws_vpc.eks_vpc.id
+resource "aws_route_table" "nat" {
+    vpc_id = aws_vpc.cluster_vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.eks_nat_gw.id
-  }
+    tags = {
+        Name = format("%s-private-route", var.cluster_name)
+    }
+}
 
-  tags = {
-    Name = format("%s-private-rt", var.cluster_name)  
-  }
-
+resource "aws_route" "nat_access" {
+    route_table_id = aws_route_table.nat.id
+    destination_cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
 }
