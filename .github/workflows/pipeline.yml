@@ -2,7 +2,7 @@ name: Pipeline Terraform AWS infraestrutura Kubernetes
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "*" ]
   pull_request:
 permissions:
   contents: read
