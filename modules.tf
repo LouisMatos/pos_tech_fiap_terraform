@@ -30,7 +30,7 @@ module "nodes" {
 
   eks_cluster    = module.master.eks_cluster
   eks_cluster_sg = module.master.security_group
-#  clb_sg         = module.nlb.security_group
+  #  clb_sg         = module.nlb.security_group
 
   nodes_instances_sizes = var.nodes_instances_sizes
   auto_scale_options    = var.auto_scale_options
