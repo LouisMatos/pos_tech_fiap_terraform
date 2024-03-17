@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       env:
-        description: 'Environment'
+        description: 'Destroy environment'
         required: true
-        default: 'dev'
+        default: 'Destroy'
 
 jobs:
   destroy:

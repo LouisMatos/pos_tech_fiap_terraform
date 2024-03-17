@@ -1,32 +1,38 @@
-resource "aws_iam_role" "eks_master_role" {
+data "aws_iam_policy_document" "eks_cluster_role" {
 
-  name = format("%s-master-role", var.cluster_name)
-  
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-            Service = "eks.amazonaws.com"
+    version = "2012-10-17"
+
+    statement {
+
+        actions = [
+            "sts:AssumeRole"
+        ]
+
+        principals {
+            type = "Service"
+            identifiers = ["eks.amazonaws.com"]
         }
-    }]
-  })
+
+    }
 
 }
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_cluster" {
+resource "aws_iam_role" "eks_cluster_role" {
+    name = format("%s-eks-cluster-role", var.cluster_name)
+    assume_role_policy = data.aws_iam_policy_document.eks_cluster_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "eks-cluster-cluster" {
     policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-    role = aws_iam_role.eks_master_role.name
+    role = aws_iam_role.eks_cluster_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_service" {
+resource "aws_iam_role_policy_attachment" "eks-cluster-service" {
     policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-    role = aws_iam_role.eks_master_role.name
+    role = aws_iam_role.eks_cluster_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "eks-AmazonEKSVPCResourceController" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-  role       = aws_iam_role.eks_master_role.name
+resource "aws_iam_role_policy_attachment" "admin-access" {
+    policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+    role = aws_iam_role.eks_cluster_role.name
 }
-
