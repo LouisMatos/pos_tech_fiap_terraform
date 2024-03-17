@@ -2,10 +2,13 @@ name: Pipeline Terraform AWS infraestrutura Kubernetes
 
 on:
   push:
-    branches:
-      - '*'
+    branches: [ "*" ]
+  pull_request:
+permissions:
+  contents: read
       
 jobs:
+
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +22,11 @@ jobs:
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Terraform Fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
       - name: Terraform Init
         run: terraform init
 
@@ -31,6 +39,10 @@ jobs:
           else
             echo "terraform.tfstate does not exist in the S3 bucket"
           fi
+
+      - name: Terraform validate
+        id: validate
+        run: terraform validate
 
       - name: Terraform Plan
         id: plan

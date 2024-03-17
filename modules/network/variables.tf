@@ -1,9 +1,4 @@
-variable "cluster_name" {
-    description = "O nome do cluster"
-    type        = string
-}
+variable "cluster_name" {}
 
-variable "region" {
-    description = "A região onde o cluster será criado"
-    type        = string
-}
+variable "aws_region" {}
+

@@ -1,19 +1,13 @@
-variable "cluster_name" {
-     description = "O nome do cluster"
-  type        = string
-}
+variable "aws_region" {}
 
-variable "kubernetes_version" {
-    description = "A versão do Kubernetes"
-    type        = string
-}
+variable "cluster_name" {}
 
-variable "private_subnet_1a" {
-    description = "A subnet privada 1a"
-    type        = string
-}
+variable "k8s_version" {}
 
-variable "private_subnet_1b" {
-    description = "A subnet privada 1b"
-    type        = string
-}
+variable "cluster_vpc" {}
+
+variable "private_subnet_1a" {}
+
+variable "private_subnet_1c" {}
+
+
