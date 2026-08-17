@@ -1,0 +1,4 @@
+# CODEOWNERS - placeholder. Substituir @postechfiap/infra pelo time/usuarios
+# reais responsaveis por esta infra (EKS, RDS, DocumentDB, Amazon MQ) antes
+# de contar com isso como gate de revisao.
+* @postechfiap/infra
