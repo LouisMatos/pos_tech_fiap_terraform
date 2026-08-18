@@ -1,0 +1,51 @@
+name: Terraform Apply
+
+# Deploy manual dedicado. Nunca dispara sozinho - so via "Run workflow" (workflow_dispatch).
+# CI (ci.yml) valida/planeja automaticamente; aplicar em hom/prod e sempre acao humana.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente a aplicar'
+        required: true
+        type: choice
+        options:
+          - hom
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply:
+    name: "Apply ${{ inputs.environment }}"
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-pos_tech_fiap_terraform
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init -backend-config=envs/${{ inputs.environment }}-backend.hcl
+
+      - name: Terraform Workspace
+        run: terraform workspace select -or-create ${{ inputs.environment }}
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -var-file=envs/${{ inputs.environment }}.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
