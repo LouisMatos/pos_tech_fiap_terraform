@@ -24,6 +24,35 @@ variable "auto_scale_options" {
   }
 }
 
+variable "github_org" {
+  description = "Organizacao/usuario dono dos repos no GitHub, usado pelo trust policy do OIDC"
+  type        = string
+}
+
+variable "rds_instance_class" {
+  default = "db.t4g.micro"
+}
+
+variable "rds_multi_az" {
+  default = false
+}
+
+variable "documentdb_instance_class" {
+  default = "db.t3.medium"
+}
+
+variable "documentdb_instance_count" {
+  default = 1
+}
+
+variable "mq_instance_type" {
+  default = "mq.t3.micro"
+}
+
+variable "mq_deployment_mode" {
+  default = "SINGLE_INSTANCE"
+}
+
 variable "auto_scale_cpu" {
   default = {
     scale_up_threshold  = 80

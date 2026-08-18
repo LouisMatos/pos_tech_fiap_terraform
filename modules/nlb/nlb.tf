@@ -28,7 +28,7 @@ resource "aws_lb_target_group" "target_jlapp_service" {
   name     = "targetjlappservice"
   port     = 8070
   protocol = "HTTP"
-  vpc_id      = var.cluster_vpc
+  vpc_id   = var.cluster_vpc
 
   health_check {
     enabled             = true
@@ -65,7 +65,7 @@ resource "aws_security_group" "elb_sg" {
 data "aws_instances" "node_group_instances" {
   instance_tags = {
     "aws:eks:nodegroup-name" = var.node_group
-    "aws:eks:cluster-name" = var.cluster_name
+    "aws:eks:cluster-name"   = var.cluster_name
   }
 }
 
