@@ -25,8 +25,8 @@ module "nodes" {
   k8s_version  = var.k8s_version
 
   cluster_vpc       = module.network.cluster_vpc
-  private_subnet_1a = module.network.public_subnet_1a
-  private_subnet_1c = module.network.public_subnet_1c
+  private_subnet_1a = module.network.private_subnet_1a
+  private_subnet_1c = module.network.private_subnet_1c
 
   eks_cluster    = module.master.eks_cluster
   eks_cluster_sg = module.master.security_group
@@ -106,9 +106,9 @@ module "github_oidc" {
     "pos_tech_fiap_pagamento"        = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_producao"         = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_lambda"           = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSLambda_FullAccess"] }
-    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"] }
-    "pos_tech_fiap_db"               = { policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"] }
-    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"] }
+    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/CloudFormationFullAccess", "arn:aws:iam::aws:policy/AmazonEC2FullAccess", "arn:aws:iam::aws:policy/AmazonRDSFullAccess", "arn:aws:iam::aws:policy/AmazonVPCFullAccess", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUserPolicy"] }
+    "pos_tech_fiap_db"               = { policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"] }
+    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/AWSLambdaFullAccess", "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUserPolicy"] }
   }
 }
 

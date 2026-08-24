@@ -43,6 +43,7 @@ resource "aws_db_instance" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
   skip_final_snapshot    = !var.deletion_protection
   publicly_accessible    = false
+  storage_encrypted      = true
 }
 
 resource "aws_secretsmanager_secret" "this" {
