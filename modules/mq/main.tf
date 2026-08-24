@@ -51,7 +51,8 @@ resource "aws_mq_broker" "this" {
 }
 
 resource "aws_secretsmanager_secret" "this" {
-  name = "${var.identifier}-mq-credentials"
+  name                    = "${var.identifier}-mq-credentials"
+  recovery_window_in_days = 0 # destroy real, sem 30 dias de soft-delete - evita colisao de nome em destroy+redeploy de teste
 }
 
 resource "aws_secretsmanager_secret_version" "this" {

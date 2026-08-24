@@ -94,6 +94,34 @@ else
   [[ "${K8S_CONFIRM}" == "y" || "${K8S_CONFIRM}" == "Y" ]] || die "Abortado — confirme a versão do EKS antes de rodar."
 fi
 
+# --- 1.6 Checar tipo de instância/engine do Amazon MQ ANTES de aplicar ------
+log "Checando se mq_instance_type é válido pra engine RabbitMQ"
+
+MQ_INSTANCE_TYPE="$(grep -E '^\s*mq_instance_type' "${TERRAFORM_REPO}/envs/dev.tfvars" | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+MQ_ENGINE_VERSION="$(grep -A2 'variable "engine_version"' "${TERRAFORM_REPO}/modules/mq/variables.tf" | grep default | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+MQ_OPTIONS_TMP="$(mktemp)"
+
+if aws mq describe-broker-instance-options --engine-type RABBITMQ --output json >"${MQ_OPTIONS_TMP}" 2>/dev/null; then
+  VALID="$(jq -r --arg t "${MQ_INSTANCE_TYPE}" --arg v "${MQ_ENGINE_VERSION}" \
+    '.BrokerInstanceOptions[]? | select(.HostInstanceType == $t) | .SupportedEngineVersions[]? | select(. == $v)' \
+    "${MQ_OPTIONS_TMP}")"
+  if [ -z "${VALID}" ]; then
+    warn "mq_instance_type=${MQ_INSTANCE_TYPE} não suporta engine RabbitMQ ${MQ_ENGINE_VERSION} nesta conta/região."
+    echo "Combinações válidas de HostInstanceType x SupportedEngineVersions pra RABBITMQ:"
+    jq -r '.BrokerInstanceOptions[]? | "\(.HostInstanceType): \(.SupportedEngineVersions | join(", "))"' "${MQ_OPTIONS_TMP}"
+    rm -f "${MQ_OPTIONS_TMP}"
+    die "Atualize mq_instance_type em envs/dev.tfvars (ou engine_version em modules/mq/variables.tf) pra uma combinação da lista acima antes de continuar."
+  fi
+  rm -f "${MQ_OPTIONS_TMP}"
+  echo "mq_instance_type=${MQ_INSTANCE_TYPE} + engine ${MQ_ENGINE_VERSION}: OK."
+else
+  rm -f "${MQ_OPTIONS_TMP}"
+  warn "Não deu pra checar automaticamente (aws-cli sem 'describe-broker-instance-options' ou sem permissão)."
+  echo "Rode manualmente: aws mq describe-broker-instance-options --engine-type RABBITMQ"
+  read -r -p "Já conferiu que mq_instance_type=${MQ_INSTANCE_TYPE} é válido pra engine ${MQ_ENGINE_VERSION}? [y/N] " MQ_CONFIRM
+  [[ "${MQ_CONFIRM}" == "y" || "${MQ_CONFIRM}" == "Y" ]] || die "Abortado — confirme o tipo de instância do MQ antes de rodar."
+fi
+
 # --- 2. AWS Budget com alerta -------------------------------------------------
 log "Criando AWS Budget (guardrail de custo, teto \$${BUDGET_LIMIT}/mês)"
 
