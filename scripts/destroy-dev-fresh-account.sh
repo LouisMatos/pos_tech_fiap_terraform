@@ -33,16 +33,19 @@ read -r -p "Digite 'destroy' pra confirmar: " CONFIRM
 # --- 1. Destroy pos_tech_fiap_lambda_terraform -------------------------------
 log "Destroy: pos_tech_fiap_lambda_terraform"
 cd "${LAMBDA_TF_REPO}"
+terraform init -input=false -reconfigure
 terraform destroy -var-file=envs/dev.tfvars -auto-approve
 
 # --- 2. Destroy pos_tech_fiap_db --------------------------------------------
 log "Destroy: pos_tech_fiap_db"
 cd "${DB_REPO}"
+terraform init -input=false -reconfigure
 terraform destroy -var-file=envs/dev.tfvars -auto-approve
 
 # --- 3. Destroy pos_tech_fiap_terraform --------------------------------------
 log "Destroy: pos_tech_fiap_terraform"
 cd "${TERRAFORM_REPO}"
+terraform init -input=false -reconfigure
 terraform destroy -var-file=envs/dev.tfvars -auto-approve
 
 # --- 4. Limpeza local ----------------------------------------------------------
