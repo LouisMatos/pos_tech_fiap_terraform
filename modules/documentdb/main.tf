@@ -39,6 +39,7 @@ resource "aws_docdb_cluster" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
   skip_final_snapshot    = true
   storage_encrypted      = true
+  tags                   = var.tags
 }
 
 resource "aws_docdb_cluster_instance" "this" {

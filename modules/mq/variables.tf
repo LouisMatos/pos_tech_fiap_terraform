@@ -33,3 +33,8 @@ variable "private_subnet_ids" {
 variable "eks_sg_id" {
   type = string
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}

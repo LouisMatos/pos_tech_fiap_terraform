@@ -42,6 +42,7 @@ resource "aws_mq_broker" "this" {
   subnet_ids          = var.deployment_mode == "SINGLE_INSTANCE" ? [var.private_subnet_ids[0]] : var.private_subnet_ids
   security_groups     = [aws_security_group.this.id]
   publicly_accessible = false
+  tags                = var.tags
 
   user {
     username = var.username
