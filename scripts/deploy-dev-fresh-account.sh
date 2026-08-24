@@ -28,6 +28,27 @@ log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
 warn() { printf '\n\033[1;33m!! %s\033[0m\n' "$1"; }
 die() { printf '\n\033[1;31mERRO: %s\033[0m\n' "$1" >&2; exit 1; }
 
+# Se qualquer coisa falhar depois daqui, mostra o que já subiu (e pode estar
+# cobrando) em vez de só abortar silenciosamente — evita ficar sem saber o
+# que ficou pra trás numa falha no meio do deploy.
+on_error() {
+  local exit_code=$?
+  warn "Deploy falhou (exit code ${exit_code})."
+  echo "Recursos já criados continuam ativos e podem estar cobrando:"
+  for repo_dir in "${TERRAFORM_REPO}" "${DB_REPO}" "${LAMBDA_TF_REPO}"; do
+    if [ -d "${repo_dir}/.terraform" ]; then
+      echo ""
+      echo "--- $(basename "${repo_dir}") ---"
+      (cd "${repo_dir}" && terraform state list 2>/dev/null) || echo "(sem state ainda)"
+    fi
+  done
+  echo ""
+  echo "Corrija o problema e rode o script de novo — é idempotente, retoma do"
+  echo "state local sem recriar o que já subiu. Ou rode"
+  echo "./destroy-dev-fresh-account.sh se não for tentar de novo agora."
+}
+trap on_error ERR
+
 # --- 1. Preflight -----------------------------------------------------------
 log "Preflight: verificando AWS CLI e credenciais"
 
@@ -42,8 +63,36 @@ CALLER_ARN="$(echo "${CALLER_IDENTITY}" | jq -r '.Arn')"
 echo "Account ID : ${ACCOUNT_ID}"
 echo "Caller     : ${CALLER_ARN}"
 echo ""
+warn "Contas AWS novas às vezes entram num 'Free Plan' restrito que bloqueia"
+echo "DocumentDB (só libera Aurora PostgreSQL). Se o apply falhar com"
+echo "FreeTierRestrictionError, é isso — resolve no Console AWS → Billing,"
+echo "não é bug de código. Terraform continua o resto normalmente."
+echo ""
 read -r -p "Confirma que essa é a conta AWS NOVA de teste que você quer usar? [y/N] " CONFIRM
 [[ "${CONFIRM}" == "y" || "${CONFIRM}" == "Y" ]] || die "Abortado pelo usuário."
+
+# --- 1.5 Checar versão do EKS ANTES de criar qualquer recurso pago ----------
+log "Checando se o k8s_version configurado está em standard support"
+
+K8S_VERSION="$(grep -E '^\s*k8s_version' "${TERRAFORM_REPO}/envs/dev.tfvars" | sed -E 's/.*=\s*"([^"]+)".*/\1/')"
+EKS_VERSIONS_TMP="$(mktemp)"
+
+if aws eks describe-cluster-versions --output json >"${EKS_VERSIONS_TMP}" 2>/dev/null; then
+  STATUS="$(jq -r --arg v "${K8S_VERSION}" '.clusterVersions[]? | select(.clusterVersion == $v) | .versionStatus' "${EKS_VERSIONS_TMP}")"
+  rm -f "${EKS_VERSIONS_TMP}"
+  if [ "${STATUS}" != "STANDARD_SUPPORT" ]; then
+    die "k8s_version=${K8S_VERSION} (envs/dev.tfvars) não está em standard support (status: '${STATUS:-não encontrado}'). Rode 'aws eks describe-cluster-versions --output table', escolha uma versão STANDARD_SUPPORT e atualize o tfvars. Versão fora disso entra em extended support: +\$0.60/h/cluster (~+\$438/mês)."
+  fi
+  echo "k8s_version=${K8S_VERSION}: OK (standard support)."
+else
+  rm -f "${EKS_VERSIONS_TMP}"
+  warn "Não deu pra checar automaticamente (aws-cli sem 'describe-cluster-versions' ou sem permissão)."
+  echo "Rode manualmente: aws eks describe-cluster-versions --output table"
+  echo "k8s_version atual: ${K8S_VERSION} — confirme que está STANDARD_SUPPORT antes de continuar."
+  echo "Fora disso entra em extended support: +\$0.60/h/cluster (~+\$438/mês)."
+  read -r -p "Já conferiu e está OK? [y/N] " K8S_CONFIRM
+  [[ "${K8S_CONFIRM}" == "y" || "${K8S_CONFIRM}" == "Y" ]] || die "Abortado — confirme a versão do EKS antes de rodar."
+fi
 
 # --- 2. AWS Budget com alerta -------------------------------------------------
 log "Criando AWS Budget (guardrail de custo, teto \$${BUDGET_LIMIT}/mês)"
