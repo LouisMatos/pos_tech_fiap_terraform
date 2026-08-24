@@ -160,10 +160,10 @@ Recursos criados:
   - Lambda (JWT/Cliente) + API Gateway
   - ECR repositories + IRSA roles + GitHub OIDC provider
 
-Estimativa de custo mensal: ~\$95-110/mês
-  (EKS control plane ~\$73 fixo + node ~\$15 + RDS/DocDB/MQ/NAT ~\$25-30
-   com as otimizações aplicadas — ver documentação HTML pro detalhamento
-   completo por recurso)
+Estimativa de custo mensal: ~\$140-160/mês (primeiros 12 meses, free tier
+  aplicado onde elegível — EKS control plane ~\$73 fixo é o maior item,
+  sem free tier possível. Ver documentação HTML pro detalhamento completo
+  por recurso e o que muda depois que o free tier expira.)
 
 Budget configurado: \$${BUDGET_LIMIT}/mês com alerta em 80%/100%
 
