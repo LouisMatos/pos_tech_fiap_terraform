@@ -53,3 +53,8 @@ variable "eks_sg_id" {
   description = "security group compartilhado pelo control plane/nodes EKS - unica origem de ingress permitida"
   type        = string
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}

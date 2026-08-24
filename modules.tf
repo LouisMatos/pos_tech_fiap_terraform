@@ -51,6 +51,7 @@ module "rds_pedido" {
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
   eks_sg_id          = module.master.security_group.id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-rds-pedido" })
 }
 
 module "rds_producao" {
@@ -66,6 +67,7 @@ module "rds_producao" {
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
   eks_sg_id          = module.master.security_group.id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-rds-producao" })
 }
 
 module "documentdb_pagamento" {
@@ -78,6 +80,7 @@ module "documentdb_pagamento" {
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
   eks_sg_id          = module.master.security_group.id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-documentdb-pagamento" })
 }
 
 module "mq_shared" {
@@ -90,6 +93,7 @@ module "mq_shared" {
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
   eks_sg_id          = module.master.security_group.id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-mq" })
 }
 
 module "ecr" {
