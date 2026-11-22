@@ -17,12 +17,24 @@ resource "aws_security_group" "cluster_master_sg" {
 
 }
 
-resource "aws_security_group_rule" "cluster_ingress_http" {
-  cidr_blocks = ["0.0.0.0/0"]
-  from_port   = 0
-  to_port     = 65535
+resource "aws_security_group_rule" "cluster_ingress_https" {
+  cidr_blocks = [var.cluster_vpc.cidr_block]
+  from_port   = 443
+  to_port     = 443
   protocol    = "tcp"
 
   security_group_id = aws_security_group.cluster_master_sg.id
   type              = "ingress"
+  description       = "Allow HTTPS from VPC for EKS control plane communication"
+}
+
+resource "aws_security_group_rule" "cluster_ingress_kubelet" {
+  cidr_blocks = [var.cluster_vpc.cidr_block]
+  from_port   = 10250
+  to_port     = 10250
+  protocol    = "tcp"
+
+  security_group_id = aws_security_group.cluster_master_sg.id
+  type              = "ingress"
+  description       = "Allow kubelet API from worker nodes"
 }

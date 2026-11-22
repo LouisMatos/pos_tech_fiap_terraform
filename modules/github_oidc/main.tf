@@ -27,11 +27,15 @@ data "aws_iam_policy_document" "assume_role" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Restrito ao repo especifico (qualquer branch/tag daquele repo)
+    # Restrito ao repo especifico e apenas a branches GitFlow (develop, release/*, master)
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${each.key}:*"]
+      values   = [
+        "repo:${var.github_org}/${each.key}:ref:refs/heads/develop",
+        "repo:${var.github_org}/${each.key}:ref:refs/heads/release/*",
+        "repo:${var.github_org}/${each.key}:ref:refs/heads/master"
+      ]
     }
   }
 }
