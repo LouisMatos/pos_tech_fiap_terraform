@@ -27,13 +27,15 @@ module "nodes" {
 
   cluster_vpc       = module.network.cluster_vpc
   private_subnet_1a = module.network.private_subnet_1a
-  private_subnet_1c = module.network.private_subnet_1c
+  # node_azs_single: 1c recebe a 1a e o modulo deduplica (distinct) -> node group numa AZ so
+  private_subnet_1c = var.node_azs_single ? module.network.private_subnet_1a : module.network.private_subnet_1c
 
   eks_cluster    = module.master.eks_cluster
   eks_cluster_sg = module.master.security_group
   #  clb_sg         = module.nlb.security_group
 
   nodes_instances_sizes = var.nodes_instances_sizes
+  node_ami_type         = var.node_ami_type
   auto_scale_options    = var.auto_scale_options
 
   auto_scale_cpu = var.auto_scale_cpu
@@ -73,6 +75,7 @@ module "rds_producao" {
 
 module "documentdb_pagamento" {
   source = "./modules/documentdb"
+  count  = var.enable_documentdb ? 1 : 0
 
   identifier     = "${var.cluster_name}-pagamento"
   instance_class = var.documentdb_instance_class
@@ -86,6 +89,7 @@ module "documentdb_pagamento" {
 
 module "mq_shared" {
   source = "./modules/mq"
+  count  = var.enable_mq ? 1 : 0
 
   identifier      = "${var.cluster_name}-mq"
   instance_type   = var.mq_instance_type
@@ -123,7 +127,7 @@ module "irsa_pedido" {
   service_name      = "pedido"
   oidc_provider_arn = module.master.oidc_provider_arn
   oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.rds_pedido.secret_arn, module.mq_shared.secret_arn]
+  secret_arns       = compact([module.rds_pedido.secret_arn, one(module.mq_shared[*].secret_arn)])
 }
 
 module "irsa_pagamento" {
@@ -132,7 +136,7 @@ module "irsa_pagamento" {
   service_name      = "pagamento"
   oidc_provider_arn = module.master.oidc_provider_arn
   oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.documentdb_pagamento.secret_arn, module.mq_shared.secret_arn]
+  secret_arns       = compact([one(module.documentdb_pagamento[*].secret_arn), one(module.mq_shared[*].secret_arn)])
 }
 
 module "irsa_producao" {
@@ -141,7 +145,7 @@ module "irsa_producao" {
   service_name      = "producao"
   oidc_provider_arn = module.master.oidc_provider_arn
   oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.rds_producao.secret_arn, module.mq_shared.secret_arn]
+  secret_arns       = compact([module.rds_producao.secret_arn, one(module.mq_shared[*].secret_arn)])
 }
 
 #module "nlb" {

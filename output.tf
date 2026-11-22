@@ -94,18 +94,18 @@ output "rds_producao_secret_arn" {
 
 output "documentdb_pagamento_endpoint" {
   description = "Endpoint do DocumentDB pra pagamento (host:port)"
-  value       = "${module.documentdb_pagamento.endpoint}:${module.documentdb_pagamento.port}"
+  value       = try("${module.documentdb_pagamento[0].endpoint}:${module.documentdb_pagamento[0].port}", null)
 }
 
 output "documentdb_pagamento_secret_arn" {
   description = "ARN do secret AWS Secrets Manager pra DocumentDB pagamento"
-  value       = module.documentdb_pagamento.secret_arn
+  value       = one(module.documentdb_pagamento[*].secret_arn)
 }
 
 # Message broker outputs
 output "mq_shared_secret_arn" {
   description = "ARN do secret AWS Secrets Manager pra Amazon MQ"
-  value       = module.mq_shared.secret_arn
+  value       = one(module.mq_shared[*].secret_arn)
 }
 
 # ECR repository URLs

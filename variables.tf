@@ -78,3 +78,39 @@ variable "auto_scale_cpu" {
   }
 }
 
+
+variable "enable_mq" {
+  description = "Cria o Amazon MQ. No dev e false: o RabbitMQ roda em StatefulSet (k8s-bootstrap/dev/rabbitmq.yaml)."
+  type        = bool
+  default     = true
+}
+
+variable "enable_documentdb" {
+  description = "Cria o DocumentDB. No dev e false: o Free Plan bloqueia, o pagamento usa Mongo em StatefulSet."
+  type        = bool
+  default     = true
+}
+
+variable "operator_principal_arns" {
+  description = "ARNs de IAM users/roles que ganham acesso de admin ao cluster EKS (access entries)"
+  type        = list(string)
+  default     = []
+}
+
+variable "node_azs_single" {
+  description = "true: node group so em private_subnet_1a (mesma AZ das RDS). So dev; sem HA de AZ."
+  type        = bool
+  default     = false
+}
+
+variable "node_ami_type" {
+  description = "AMI type do node group. AL2023_ARM_64_STANDARD para instancias t4g."
+  type        = string
+  default     = "AL2023_x86_64_STANDARD"
+}
+
+variable "coredns_replicas" {
+  description = "Replicas do CoreDNS"
+  type        = number
+  default     = 2
+}

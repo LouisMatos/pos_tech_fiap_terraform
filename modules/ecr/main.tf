@@ -3,6 +3,7 @@ resource "aws_ecr_repository" "this" {
 
   name                 = each.value
   image_tag_mutability = "IMMUTABLE"
+  force_delete         = true # destroy do dev nao trava com imagens dentro
 
   image_scanning_configuration {
     scan_on_push = true
