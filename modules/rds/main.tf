@@ -44,6 +44,7 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot    = !var.deletion_protection
   publicly_accessible    = false
   storage_encrypted      = true
+  tags                   = var.tags
 }
 
 resource "aws_secretsmanager_secret" "this" {
