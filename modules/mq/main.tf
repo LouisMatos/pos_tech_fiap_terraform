@@ -34,14 +34,15 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_mq_broker" "this" {
-  broker_name         = var.identifier
-  engine_type         = "RabbitMQ"
-  engine_version      = var.engine_version
-  host_instance_type  = var.instance_type
-  deployment_mode     = var.deployment_mode
-  subnet_ids          = var.deployment_mode == "SINGLE_INSTANCE" ? [var.private_subnet_ids[0]] : var.private_subnet_ids
-  security_groups     = [aws_security_group.this.id]
-  publicly_accessible = false
+  broker_name                = var.identifier
+  engine_type                = "RabbitMQ"
+  engine_version             = var.engine_version
+  auto_minor_version_upgrade = true # AWS exige true pra engine RabbitMQ 3.13
+  host_instance_type         = var.instance_type
+  deployment_mode            = var.deployment_mode
+  subnet_ids                 = var.deployment_mode == "SINGLE_INSTANCE" ? [var.private_subnet_ids[0]] : var.private_subnet_ids
+  security_groups            = [aws_security_group.this.id]
+  publicly_accessible        = false
 
   user {
     username = var.username
@@ -50,7 +51,8 @@ resource "aws_mq_broker" "this" {
 }
 
 resource "aws_secretsmanager_secret" "this" {
-  name = "${var.identifier}-mq-credentials"
+  name                    = "${var.identifier}-mq-credentials"
+  recovery_window_in_days = 0 # destroy real, sem 30 dias de soft-delete - evita colisao de nome em destroy+redeploy de teste
 }
 
 resource "aws_secretsmanager_secret_version" "this" {

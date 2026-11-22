@@ -3,6 +3,7 @@ module "network" {
 
   cluster_name = var.cluster_name
   aws_region   = var.aws_region
+  nat_type     = var.nat_type
 }
 
 module "master" {

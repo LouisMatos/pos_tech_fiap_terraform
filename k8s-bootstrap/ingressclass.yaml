@@ -1,0 +1,39 @@
+# loadBalancerName/subnets/security-groups tem merge behavior Exclusive no
+# IngressGroup do AWS Load Balancer Controller: so um membro do grupo pode
+# declarar. Centralizar aqui evita os 3 repos de servico colidindo entre si -
+# cada Ingress deles so declara group.order e as anotacoes de escopo-Ingress.
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb-jlapp
+spec:
+  controller: ingress.k8s.aws/alb
+  parameters:
+    apiGroup: elbv2.k8s.aws
+    kind: IngressClassParams
+    name: alb-jlapp-cfg
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: IngressClassParams
+metadata:
+  name: alb-jlapp-cfg
+spec:
+  scheme: internet-facing
+  ipAddressType: ipv4
+  group:
+    name: jlapp
+  # loadBalancerName removido: nao existe no schema da CRD IngressClassParams
+  # do chart aws-load-balancer-controller 1.13.0 (app v2.13.0). ALB fica com
+  # nome auto-gerado (k8s-jlapp-...). Nome fixo so voltaria com CRD mais nova.
+  inboundCIDRs:
+    - 0.0.0.0/0
+  tags:
+    - key: Project
+      value: jlapp
+    - key: Environment
+      value: dev
+  loadBalancerAttributes:
+    - key: idle_timeout.timeout_seconds
+      value: "60"
+    - key: routing.http.drop_invalid_header_fields.enabled
+      value: "true"

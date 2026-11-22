@@ -49,7 +49,8 @@ resource "aws_docdb_cluster_instance" "this" {
 }
 
 resource "aws_secretsmanager_secret" "this" {
-  name = "${var.identifier}-db-credentials"
+  name                    = "${var.identifier}-db-credentials"
+  recovery_window_in_days = 0 # destroy real, sem 30 dias de soft-delete - evita colisao de nome em destroy+redeploy de teste
 }
 
 resource "aws_secretsmanager_secret_version" "this" {

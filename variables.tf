@@ -6,8 +6,17 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "nat_type" {
+  description = "gateway (NAT Gateway gerenciado, ~$32-35/mes, HA) ou instance (EC2 t3.micro, ~$3-4/mes, sem HA - so dev/teste)"
+  default     = "gateway"
+}
+
 variable "k8s_version" {
-  default = "1.24"
+  # CONFIRME a versao atual em standard support antes de aplicar:
+  # aws eks describe-cluster-versions --output table
+  # 1.24 estava fora de standard support e cairia em extended support
+  # (+$0.60/h/cluster, ~+$438/mes) - nao aplicar sem checar.
+  default = "1.31"
 }
 
 variable "nodes_instances_sizes" {

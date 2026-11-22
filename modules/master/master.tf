@@ -17,6 +17,13 @@ resource "aws_eks_cluster" "eks_cluster" {
 
   }
 
+  # Explicito: sem isso a API do EKS tenta habilitar Auto Mode por
+  # default, que exige k8s >= 1.29 e usa um modelo de compute diferente
+  # do managed node group provisionado em modules/nodes.
+  compute_config {
+    enabled = false
+  }
+
   tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }

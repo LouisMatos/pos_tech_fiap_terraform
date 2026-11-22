@@ -1,0 +1,971 @@
+<title>Dev Infra Blueprint</title>
+<style>
+  :root {
+    --bg: #EEF1F0;
+    --surface: #FFFFFF;
+    --surface-sunken: #E2E8E6;
+    --border: #C7D1CE;
+    --ink: #14201D;
+    --ink-muted: #4B5A56;
+    --ink-faint: #7C8B87;
+    --accent: #0F6E62;
+    --accent-strong: #0B4F46;
+    --accent-soft: #D8ECE8;
+    --good: #1E8E5A;
+    --good-soft: #DFF3E7;
+    --warn: #A56A0F;
+    --warn-soft: #F5E9D2;
+    --critical: #B23A2E;
+    --critical-soft: #F5DEDB;
+    --radius: 6px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1614;
+      --surface: #101F1C;
+      --surface-sunken: #0D1A17;
+      --border: #23433C;
+      --ink: #E7F2EF;
+      --ink-muted: #9FB5B0;
+      --ink-faint: #6C8681;
+      --accent: #4FD8C4;
+      --accent-strong: #7FE6D5;
+      --accent-soft: #163832;
+      --good: #4CC98A;
+      --good-soft: #123324;
+      --warn: #E0A83D;
+      --warn-soft: #332609;
+      --critical: #E4685A;
+      --critical-soft: #341916;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0B1614;
+    --surface: #101F1C;
+    --surface-sunken: #0D1A17;
+    --border: #23433C;
+    --ink: #E7F2EF;
+    --ink-muted: #9FB5B0;
+    --ink-faint: #6C8681;
+    --accent: #4FD8C4;
+    --accent-strong: #7FE6D5;
+    --accent-soft: #163832;
+    --good: #4CC98A;
+    --good-soft: #123324;
+    --warn: #E0A83D;
+    --warn-soft: #332609;
+    --critical: #E4685A;
+    --critical-soft: #341916;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 20px 80px;
+  }
+
+  a { color: var(--accent-strong); }
+  :root[data-theme="dark"] a, @media (prefers-color-scheme: dark) { }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Titleblock ---------- */
+  .titleblock {
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--accent);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin-top: 28px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: end;
+  }
+
+  .titleblock-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    margin: 0 0 10px;
+  }
+
+  .titleblock h1 {
+    font-family: var(--mono);
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  .titleblock p {
+    margin: 0;
+    color: var(--ink-muted);
+    max-width: 60ch;
+  }
+
+  .cost-hero {
+    text-align: right;
+    border-left: 1px solid var(--border);
+    padding-left: 20px;
+  }
+
+  .cost-hero .num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    white-space: nowrap;
+  }
+
+  .cost-hero .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- Section shell ---------- */
+  section {
+    margin-top: 40px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .section-intro {
+    color: var(--ink-muted);
+    max-width: 68ch;
+    margin: 0 0 20px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  /* ---------- Prereq warning ---------- */
+  .prereq {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .prereq .mark {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--warn);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .prereq p { margin: 0 0 8px; color: var(--ink); }
+  .prereq p:last-child { margin-bottom: 0; }
+  .prereq code { background: var(--surface); }
+
+  /* ---------- Diagram ---------- */
+  .diagram-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  svg text { fill: currentColor; font-family: var(--mono); }
+  svg .lbl-small { font-size: 10.5px; }
+  svg .lbl-title { font-size: 12.5px; font-weight: 700; }
+  svg .muted { opacity: 0.62; }
+  svg .accent-fill { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box { fill: var(--surface); stroke: var(--border); }
+  svg .box-sunken { fill: var(--surface-sunken); stroke: var(--border); }
+
+  figcaption {
+    font-size: 13.5px;
+    color: var(--ink-muted);
+    margin-top: 12px;
+    max-width: 68ch;
+  }
+
+  figure { margin: 0; }
+
+  /* ---------- Cost chart ---------- */
+  .cost-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+
+  .cost-table thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cost-table thead th.num { text-align: right; }
+
+  .cost-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cost-table tbody tr:nth-child(even) td {
+    background: var(--surface-sunken);
+  }
+
+  .cost-table td {
+    padding: 12px;
+    vertical-align: middle;
+  }
+
+  .cost-table td.num {
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .res-name { font-weight: 600; }
+  .res-note { display: block; font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; font-weight: 400; }
+
+  .bar-cell { min-width: 160px; }
+  .bar-track {
+    background: var(--surface-sunken);
+    border-radius: 3px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status-chip.good { background: var(--good-soft); color: var(--good); }
+  .status-chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .status-chip.critical { background: var(--critical-soft); color: var(--critical); }
+  .status-chip::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+  tfoot td {
+    padding: 14px 12px;
+    font-family: var(--mono);
+    font-weight: 700;
+    border-top: 2px solid var(--ink);
+  }
+  tfoot td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .legend-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .legend-row span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-row .dot { width: 8px; height: 8px; border-radius: 999px; }
+
+  .after-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    color: var(--ink-muted);
+  }
+  .after-note strong { color: var(--ink); }
+
+  /* ---------- Checklist ---------- */
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist li:last-child { border-bottom: none; }
+
+  .checklist input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    position: relative;
+    background: var(--surface);
+  }
+  .checklist input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .checklist input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--surface);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .checklist input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .checklist label { cursor: pointer; }
+  .checklist .item-title { font-weight: 600; display: block; }
+  .checklist .item-note { color: var(--ink-muted); font-size: 13.5px; }
+  .checklist li.done .item-title { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--border); }
+
+  .progress-track {
+    height: 6px;
+    background: var(--surface-sunken);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.25s ease;
+  }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ---------- Steps ---------- */
+  .steps {
+    counter-reset: step;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps li:last-child { border-bottom: none; }
+
+  .steps li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .steps .step-title { font-weight: 600; margin: 0 0 4px; }
+  .steps .step-body { color: var(--ink-muted); font-size: 14px; margin: 0; }
+  .steps code { font-size: 12.5px; }
+
+  code {
+    font-family: var(--mono);
+    background: var(--surface-sunken);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  pre {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; }
+
+  /* ---------- Repo order flow ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 4px 0 8px;
+  }
+  .flow-node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    min-width: 190px;
+    flex-shrink: 0;
+  }
+  .flow-node .repo-name {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--accent-strong);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .flow-node .repo-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+  .flow-arrow {
+    flex-shrink: 0;
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+  }
+
+  /* ---------- Teardown ---------- */
+  .teardown {
+    background: var(--critical-soft);
+    border: 1px solid var(--critical);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  .teardown .mark {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--critical);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .teardown p { margin: 0 0 10px; }
+  .teardown p:last-child { margin-bottom: 0; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .titleblock { grid-template-columns: 1fr; }
+    .cost-hero { text-align: left; border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 16px; }
+    .steps li, .checklist li { grid-template-columns: 26px 1fr; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="titleblock">
+    <div>
+      <p class="titleblock-eyebrow">jlapp · pos-tech-fiap · ambiente dev</p>
+      <h1>Dev Infra Blueprint</h1>
+      <p>Bootstrap de conta AWS nova pra subir e testar o stack completo — EKS, RDS, DocumentDB, Amazon MQ, DynamoDB e Lambda — com custo otimizado pro cenário de teste.</p>
+    </div>
+    <div class="cost-hero">
+      <div class="num">$140–160</div>
+      <div class="label">USD / mês · 12 primeiros meses</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="prereq">
+      <span class="mark">Pré-requisito</span>
+      <div>
+        <p>Antes de rodar o script, as PRs <code>#17</code> (fix de segurança — subnet pública dos nodes + security group aberto) e <code>#18</code> (outputs Terraform) precisam estar <strong>merged em <code>develop</code></strong> em <code>pos_tech_fiap_terraform</code>.</p>
+        <p>Sem isso, a infra sobe com o security group do cluster aberto pra internet inteira, e o script não consegue capturar os outputs (ARNs de IRSA, endpoints) pra consolidar no resumo final.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">01 · arquitetura</p>
+    <h2>O que sobe, e como as peças se falam</h2>
+    <p class="section-intro">Um cluster EKS com 3 microsserviços coreografados via Amazon MQ, cada um com seu próprio datastore. Egress da VPC passa por uma NAT Instance em vez de NAT Gateway gerenciado — a principal troca de custo por manutenção deste ambiente.</p>
+
+    <div class="diagram-wrap">
+      <figure>
+        <svg viewBox="0 0 860 420" role="img" aria-label="VPC contendo cluster EKS com pods pedido, pagamento e producao; pedido publica em Amazon MQ, pagamento e producao consomem e publicam de volta; cada serviço conecta ao seu próprio banco (RDS Postgres, DocumentDB, RDS MySQL); egress sai por uma NAT Instance em subnet pública; Lambda e DynamoDB ficam fora da VPC atrás de API Gateway.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <!-- VPC boundary -->
+          <rect x="20" y="20" width="600" height="380" rx="6" class="box" stroke-dasharray="4 3"></rect>
+          <text x="34" y="42" class="lbl-small muted">VPC 10.0.0.0/16 · us-east-1</text>
+
+          <!-- Public subnet / NAT -->
+          <rect x="40" y="56" width="180" height="70" rx="4" class="box-sunken"></rect>
+          <text x="52" y="76" class="lbl-small">subnet pública</text>
+          <rect x="52" y="84" width="90" height="30" rx="4" class="accent-fill"></rect>
+          <text x="97" y="103" class="lbl-small" text-anchor="middle">NAT t3.micro</text>
+
+          <!-- EKS cluster box -->
+          <rect x="40" y="150" width="560" height="230" rx="4" class="box"></rect>
+          <text x="52" y="172" class="lbl-title">EKS · jlapp-cluster-dev</text>
+          <text x="52" y="188" class="lbl-small muted">1x node t3.small · subnets privadas</text>
+
+          <!-- pedido pod -->
+          <rect x="56" y="204" width="130" height="50" rx="4" class="box-sunken"></rect>
+          <text x="121" y="224" class="lbl-small" text-anchor="middle" font-weight="700">pedido</text>
+          <text x="121" y="238" class="lbl-small muted" text-anchor="middle">publica</text>
+
+          <!-- pagamento pod -->
+          <rect x="56" y="292" width="130" height="50" rx="4" class="box-sunken"></rect>
+          <text x="121" y="312" class="lbl-small" text-anchor="middle" font-weight="700">pagamento</text>
+          <text x="121" y="326" class="lbl-small muted" text-anchor="middle">consome + publica</text>
+
+          <!-- producao pod -->
+          <rect x="230" y="292" width="130" height="50" rx="4" class="box-sunken"></rect>
+          <text x="295" y="312" class="lbl-small" text-anchor="middle" font-weight="700">producao</text>
+          <text x="295" y="326" class="lbl-small muted" text-anchor="middle">consome + publica</text>
+
+          <!-- MQ -->
+          <rect x="230" y="204" width="130" height="50" rx="4" class="accent-fill"></rect>
+          <text x="295" y="224" class="lbl-small" text-anchor="middle" font-weight="700">Amazon MQ</text>
+          <text x="295" y="238" class="lbl-small muted" text-anchor="middle">RabbitMQ · 5671/tls</text>
+
+          <!-- Databases row -->
+          <rect x="420" y="204" width="160" height="50" rx="4" class="box-sunken"></rect>
+          <text x="500" y="224" class="lbl-small" text-anchor="middle" font-weight="700">RDS Postgres</text>
+          <text x="500" y="238" class="lbl-small muted" text-anchor="middle">pedido · db.t4g.micro</text>
+
+          <rect x="420" y="292" width="160" height="50" rx="4" class="box-sunken"></rect>
+          <text x="500" y="312" class="lbl-small" text-anchor="middle" font-weight="700">DocumentDB</text>
+          <text x="500" y="326" class="lbl-small muted" text-anchor="middle">pagamento · db.t4g.medium</text>
+
+          <rect x="230" y="350" width="160" height="0" opacity="0"></rect>
+
+          <!-- pedido -> MQ -->
+          <line x1="186" y1="229" x2="228" y2="229" stroke="currentColor" marker-end="url(#arrow)"></line>
+          <!-- MQ -> pagamento -->
+          <line x1="270" y1="254" x2="145" y2="290" stroke="currentColor" marker-end="url(#arrow)"></line>
+          <text x="185" y="278" class="lbl-small muted">status</text>
+          <!-- MQ -> producao -->
+          <line x1="295" y1="254" x2="295" y2="290" stroke="currentColor" marker-end="url(#arrow)"></line>
+          <!-- pedido -> RDS pedido -->
+          <line x1="186" y1="216" x2="418" y2="216" stroke="currentColor" marker-end="url(#arrow)" class="muted"></line>
+          <!-- pagamento -> DocumentDB -->
+          <line x1="186" y1="317" x2="418" y2="317" stroke="currentColor" marker-end="url(#arrow)" class="muted"></line>
+
+          <!-- RDS producao label reused via MySQL note -->
+          <text x="500" y="352" class="lbl-small muted" text-anchor="middle">producao usa RDS MySQL (fora da caixa, mesmo padrão)</text>
+
+          <!-- external: API Gateway + Lambda + DynamoDB -->
+          <rect x="660" y="150" width="180" height="90" rx="4" class="box"></rect>
+          <text x="750" y="172" class="lbl-title" text-anchor="middle">fora da VPC</text>
+          <rect x="674" y="184" width="70" height="40" rx="4" class="box-sunken"></rect>
+          <text x="709" y="200" class="lbl-small" text-anchor="middle">API GW</text>
+          <text x="709" y="212" class="lbl-small muted" text-anchor="middle">+ Lambda</text>
+          <rect x="754" y="184" width="72" height="40" rx="4" class="box-sunken"></rect>
+          <text x="790" y="200" class="lbl-small" text-anchor="middle">DynamoDB</text>
+          <text x="790" y="212" class="lbl-small muted" text-anchor="middle">Customers</text>
+          <line x1="744" y1="204" x2="752" y2="204" stroke="currentColor" marker-end="url(#arrow)"></line>
+
+          <!-- egress arrow from EKS to NAT -->
+          <line x1="130" y1="148" x2="130" y2="128" stroke="currentColor" marker-end="url(#arrow)" class="muted"></line>
+          <text x="140" y="140" class="lbl-small muted">egress</text>
+        </svg>
+      </figure>
+      <figcaption>Coreografia via Amazon MQ: pedido publica, pagamento e producao consomem e devolvem status pra fila que pedido escuta. Cada serviço só acessa seu próprio banco. NAT Instance (não NAT Gateway) faz o egress da subnet privada — a troca de custo por manutenção manual coberta neste plano.</figcaption>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">02 · custo</p>
+    <h2>Onde o dinheiro vai</h2>
+    <p class="section-intro">Estimativa por recurso, região us-east-1, on-demand. EKS control plane é o item fixo que não tem free tier possível — sozinho já é metade do orçamento mensal.</p>
+
+    <div class="panel">
+      <div style="overflow-x:auto">
+        <table class="cost-table">
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Free tier</th>
+              <th class="bar-cell">Custo relativo</th>
+              <th class="num">USD/mês</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="res-name">EKS control plane<span class="res-note">$0.10/h fixo, sem free tier possível</span></span></td>
+              <td><span class="status-chip critical">nunca</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--critical)"></div></div></td>
+              <td class="num">73.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">DocumentDB<span class="res-note">db.t4g.medium · pagamento</span></span></td>
+              <td><span class="status-chip critical">nunca</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:64%;background:var(--critical)"></div></div></td>
+              <td class="num">47.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">EKS node<span class="res-note">t3.small ×1 · só micro entra em free tier</span></span></td>
+              <td><span class="status-chip warn">não elegível</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:21%;background:var(--warn)"></div></div></td>
+              <td class="num">15.18</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">RDS Postgres + MySQL<span class="res-note">db.t4g.micro ×2 · pool de 750h/mês compartilhado</span></span></td>
+              <td><span class="status-chip warn">parcial</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--warn)"></div></div></td>
+              <td class="num">11.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">Incidentais<span class="res-note">EBS gp3, dados transferidos</span></span></td>
+              <td><span class="status-chip warn">parcial</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--warn)"></div></div></td>
+              <td class="num">3.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">Secrets Manager<span class="res-note">4 secrets · $0.40 cada</span></span></td>
+              <td><span class="status-chip warn">nunca</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:2%;background:var(--warn)"></div></div></td>
+              <td class="num">1.60</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">Amazon MQ<span class="res-note">mq.t3.micro · single instance</span></span></td>
+              <td><span class="status-chip good">12 meses</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--good)"></div></div></td>
+              <td class="num">0.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">NAT Instance<span class="res-note">t3.micro · instância EC2</span></span></td>
+              <td><span class="status-chip good">12 meses</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--good)"></div></div></td>
+              <td class="num">0.00</td>
+            </tr>
+            <tr>
+              <td><span class="res-name">DynamoDB + Lambda + ECR<span class="res-note">capacidade 1/1 · sempre no tier grátis</span></span></td>
+              <td><span class="status-chip good">sempre</span></td>
+              <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--good)"></div></div></td>
+              <td class="num">0.00</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total estimado</td>
+              <td></td>
+              <td></td>
+              <td class="num">≈ 150.78</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="legend-row">
+        <span><span class="dot" style="background:var(--good)"></span>coberto pelo free tier</span>
+        <span><span class="dot" style="background:var(--warn)"></span>parcial ou sem free tier, custo baixo</span>
+        <span><span class="dot" style="background:var(--critical)"></span>sem free tier, maior peso no orçamento</span>
+      </div>
+
+      <div class="after-note">
+        <strong>Depois dos 12 meses:</strong> Amazon MQ e NAT Instance deixam de ser grátis (~$22 + ~$3/mês), levando o total pra <strong>~$175-180/mês</strong>. Vale destruir o ambiente entre sessões de teste em vez de deixar rodando.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">03 · conta aws</p>
+    <h2>Checklist antes do primeiro deploy</h2>
+    <p class="section-intro">Marque conforme for completando — fica salvo neste navegador.</p>
+
+    <div class="panel">
+      <div class="progress-label"><span>Progresso</span><span id="progress-text">0 / 6</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <ul class="checklist" id="checklist">
+        <li>
+          <input type="checkbox" id="c1">
+          <label for="c1">
+            <span class="item-title">Ativar MFA na conta root</span>
+            <span class="item-note">Console AWS → Security credentials. Não use a root pra operar depois disso.</span>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="c2">
+          <label for="c2">
+            <span class="item-title">Criar IAM user pra Terraform</span>
+            <span class="item-note">AdministratorAccess pra esse primeiro bootstrap local — depois de rodar, considere restringir.</span>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="c3">
+          <label for="c3">
+            <span class="item-title">Configurar AWS CLI</span>
+            <span class="item-note"><code>aws configure</code> com o access key do IAM user, região <code>us-east-1</code>.</span>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="c4">
+          <label for="c4">
+            <span class="item-title">Confirmar que as PRs #17 e #18 estão merged</span>
+            <span class="item-note">pos_tech_fiap_terraform, branch develop.</span>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="c5">
+          <label for="c5">
+            <span class="item-title">Instalar terraform, aws cli e jq</span>
+            <span class="item-note">O script de deploy verifica isso automaticamente e para se faltar algo.</span>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="c6">
+          <label for="c6">
+            <span class="item-title">Ter um e-mail pra receber o alerta de orçamento</span>
+            <span class="item-note">O script cria o AWS Budget antes de qualquer apply.</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">04 · ordem entre repos</p>
+    <h2>Por que essa sequência</h2>
+    <p class="section-intro">Cada repo espera que o anterior já tenha rodado — não porque leem o state um do outro (não leem hoje), mas porque a nomeação de recursos e a política IAM assumem essa ordem.</p>
+
+    <div class="flow">
+      <div class="flow-node">
+        <span class="repo-name">pos_tech_fiap_terraform</span>
+        <p class="repo-desc">VPC, EKS, RDS, DocumentDB, MQ, ECR, IRSA, GitHub OIDC. Base de tudo — os outros dois repos referenciam nomes que ele decide (ex: <code>Customers-dev</code>).</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="repo-name">pos_tech_fiap_db</span>
+        <p class="repo-desc">Tabela DynamoDB <code>Customers-dev</code>. Independente do EKS, mas o nome precisa bater com o que <code>lambda_terraform</code> espera no próximo passo.</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="repo-name">pos_tech_fiap_lambda_terraform</span>
+        <p class="repo-desc">Lambda + API Gateway. Referencia o nome da tabela DynamoDB por string — precisa que o passo anterior já tenha criado a tabela com esse nome exato.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">05 · rodando o script</p>
+    <h2>deploy-dev-fresh-account.sh</h2>
+    <p class="section-intro">Roda a partir de <code>pos_tech_fiap_terraform/scripts/</code>, local, contra a conta AWS configurada no seu <code>aws cli</code>.</p>
+
+    <div class="panel">
+      <pre><code>cd pos_tech_fiap_terraform/scripts
+./deploy-dev-fresh-account.sh 50   # 50 = teto mensal em USD pro budget alert</code></pre>
+
+      <ol class="steps" style="margin-top:24px">
+        <li>
+          <div>
+            <p class="step-title">Preflight</p>
+            <p class="step-body">Confere <code>aws</code>, <code>terraform</code> e <code>jq</code> instalados. Mostra o account id e pede confirmação explícita — importante numa conta nova, sem rede de segurança.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">AWS Budget</p>
+            <p class="step-body">Cria alerta por e-mail em 80% e 100% do teto informado, antes de qualquer recurso subir.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Apply pos_tech_fiap_terraform</p>
+            <p class="step-body">VPC, EKS, RDS, DocumentDB, MQ, ECR, IRSA — state local, <code>envs/dev.tfvars</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Apply pos_tech_fiap_db</p>
+            <p class="step-body">Tabela DynamoDB <code>Customers-dev</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Apply pos_tech_fiap_lambda_terraform</p>
+            <p class="step-body">Lambda JWT/Cliente + API Gateway.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Consolidar outputs</p>
+            <p class="step-body">Junta os 3 <code>terraform output -json</code> num único <code>outputs-dev.json</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Imprimir comandos gh secret set</p>
+            <p class="step-body">Prontos pra copiar/colar se você quiser wire os workflows de CI depois — não executados automaticamente.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <p class="step-title">Resumo final</p>
+            <p class="step-body">Lista o que foi criado, estimativa de custo mensal, e lembrete do comando de destroy.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-label">06 · teardown</p>
+    <h2>Desligar depois de testar</h2>
+
+    <div class="teardown">
+      <span class="mark">Importante</span>
+      <p>Amazon MQ e NAT Instance ficam grátis só nos primeiros 12 meses da conta e enquanto estiverem rodando — <strong>não existe modo "pausado" barato</strong> pra esse stack. Fora de sessão de teste ativa, destrua.</p>
+      <pre style="margin-top:14px"><code>cd pos_tech_fiap_terraform/scripts
+./destroy-dev-fresh-account.sh</code></pre>
+      <p style="margin-top:14px">Ordem reversa (lambda_terraform → db → terraform), pede confirmação digitando <code>destroy</code>. Depois, confira o Cost Explorer nas 24h seguintes — EIPs órfãos e snapshots automáticos às vezes sobrevivem a um destroy.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>jlapp · pos-tech-fiap · dev environment</span>
+    <span>us-east-1 · estimativas sujeitas a mudança de pricing AWS</span>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var boxes = document.querySelectorAll('#checklist input[type="checkbox"]');
+    var fill = document.getElementById('progress-fill');
+    var text = document.getElementById('progress-text');
+    var KEY = 'jlapp-dev-checklist';
+
+    function update() {
+      var checked = 0;
+      boxes.forEach(function (b) {
+        b.closest('li').classList.toggle('done', b.checked);
+        if (b.checked) checked++;
+      });
+      var pct = (checked / boxes.length) * 100;
+      fill.style.width = pct + '%';
+      text.textContent = checked + ' / ' + boxes.length;
+    }
+
+    function save() {
+      var state = {};
+      boxes.forEach(function (b) { state[b.id] = b.checked; });
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function load() {
+      try {
+        var state = JSON.parse(localStorage.getItem(KEY) || '{}');
+        boxes.forEach(function (b) { if (state[b.id]) b.checked = true; });
+      } catch (e) {}
+    }
+
+    load();
+    update();
+
+    boxes.forEach(function (b) {
+      b.addEventListener('change', function () { update(); save(); });
+    });
+  })();
+</script>
