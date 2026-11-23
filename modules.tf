@@ -115,9 +115,9 @@ module "github_oidc" {
     "pos_tech_fiap_pagamento"        = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_producao"         = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_lambda"           = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSLambda_FullAccess"] }
-    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/CloudFormationFullAccess", "arn:aws:iam::aws:policy/AmazonEC2FullAccess", "arn:aws:iam::aws:policy/AmazonRDSFullAccess", "arn:aws:iam::aws:policy/AmazonVPCFullAccess", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUserPolicy"] }
+    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/AWSCloudFormationFullAccess", "arn:aws:iam::aws:policy/AmazonEC2FullAccess", "arn:aws:iam::aws:policy/AmazonRDSFullAccess", "arn:aws:iam::aws:policy/AmazonVPCFullAccess", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser"] }
     "pos_tech_fiap_db"               = { policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"] }
-    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/AWSLambdaFullAccess", "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUserPolicy"] }
+    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/AWSLambda_FullAccess", "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser"] }
   }
 }
 
@@ -133,10 +133,11 @@ module "irsa_pedido" {
 module "irsa_pagamento" {
   source = "./modules/irsa"
 
-  service_name      = "pagamento"
-  oidc_provider_arn = module.master.oidc_provider_arn
-  oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = compact([one(module.documentdb_pagamento[*].secret_arn), one(module.mq_shared[*].secret_arn)])
+  service_name          = "pagamento"
+  oidc_provider_arn     = module.master.oidc_provider_arn
+  oidc_provider_url     = module.master.oidc_provider_url
+  secret_arns           = compact([one(module.documentdb_pagamento[*].secret_arn), one(module.mq_shared[*].secret_arn)])
+  enable_secrets_access = var.enable_documentdb || var.enable_mq
 }
 
 module "irsa_producao" {

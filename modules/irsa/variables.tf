@@ -21,3 +21,11 @@ variable "secret_arns" {
   description = "ARNs dos secrets do Secrets Manager que este servico pode ler (DB, MQ)"
   type        = list(string)
 }
+
+# Policy IAM exige ao menos um Resource: sem secrets (ex.: pagamento no dev, sem
+# DocumentDB nem Amazon MQ) a policy nao e criada. Bool conhecido no plan, porque
+# o tamanho de secret_arns pode ser desconhecido ate o apply.
+variable "enable_secrets_access" {
+  type    = bool
+  default = true
+}
