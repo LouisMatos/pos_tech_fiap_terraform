@@ -24,6 +24,14 @@ resource "aws_eks_cluster" "eks_cluster" {
     enabled = false
   }
 
+  # access_entries.tf (operadores e roles do GitHub Actions) exige modo API.
+  # Correção do deploy de ago/2026 que tinha se perdido (gotcha 4).
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+    # ForceNew: precisa casar com o valor de criação (true), senão recria o cluster.
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
