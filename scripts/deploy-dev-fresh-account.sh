@@ -213,7 +213,14 @@ log "Deploy: criando ECR (pré-requisito da Lambda) antes dos applies em paralel
 
 cd "${TERRAFORM_REPO}"
 terraform init -input=false
-terraform apply -input=false -auto-approve -var-file=envs/dev.tfvars -target=module.ecr
+# Só na 1ª execução: -target falha se o state tiver moves pendentes
+# ("Moved resource instances excluded by targeting"), e numa reexecução o
+# ECR já existe e o apply completo abaixo cuida dele.
+if aws ecr describe-repositories --region "${REGION}" --repository-names jlapp-lambda >/dev/null 2>&1; then
+  echo "ECR jlapp-lambda já existe: pulando apply com -target."
+else
+  terraform apply -input=false -auto-approve -var-file=envs/dev.tfvars -target=module.ecr
+fi
 
 # --- 3.1 Build + push da imagem da Lambda --------------------------------------
 # O CreateFunction falha com "Source image ... does not exist" se o repo estiver
