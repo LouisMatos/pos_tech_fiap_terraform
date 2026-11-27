@@ -160,6 +160,11 @@ images:
 EOF
 
   kubectl apply -k "${overlay}"
+done
+
+# Aplica os 3 antes de esperar: com maxSurge 0 e nodes no limite de memória, o
+# rollout de um serviço só cabe depois que os outros liberam o request antigo.
+for svc in ${SERVICES}; do
   kubectl rollout status "deployment/jlapp-${svc}-deployment" -n "${NAMESPACE}" --timeout=300s
 done
 
