@@ -206,7 +206,9 @@ smoke() { # método, url, [corpo json]
 
 SMOKE_FAILED=0
 smoke GET "http://${ALB_HOST}/api/v1/produtos" || SMOKE_FAILED=1
-smoke GET "http://${ALB_HOST}/api/v1/producao" || SMOKE_FAILED=1
+# producao não tem GET sem parâmetro (só /api/v1/producao/{numero_pedido}): a
+# readiness dele já foi checada no rollout e no healthcheck do ALB; o fluxo
+# pedido -> pagamento -> producao é validado no G3.
 if [ -n "${API_URL}" ]; then
   smoke POST "${API_URL}/jwt" "{\"cpf\":\"${SMOKE_CPF}\"}" || SMOKE_FAILED=1
 else
