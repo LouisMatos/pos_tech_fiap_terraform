@@ -55,6 +55,12 @@ if command -v kubectl >/dev/null 2>&1 && command -v helm >/dev/null 2>&1 \
     || warn "Falha ao remover os Ingress (cluster inacessível?). Confira o ALB no console depois."
   helm uninstall aws-load-balancer-controller -n kube-system \
     || warn "helm uninstall falhou ou o release não existe."
+  # PVCs (Mongo, gp3) viram volumes EBS que o CSI só apaga com o cluster vivo;
+  # sem isso o volume fica órfão depois do destroy.
+  kubectl delete statefulset --all -n default --wait=true --timeout=300s \
+    || warn "Falha ao remover os StatefulSets."
+  kubectl delete pvc --all -n default --wait=true --timeout=300s \
+    || warn "Falha ao remover os PVCs: confira volumes EBS órfãos depois."
 else
   warn "Cluster ${CLUSTER_NAME} inacessível (ou kubectl/helm ausentes): pulando Ingress e LBC."
 fi
