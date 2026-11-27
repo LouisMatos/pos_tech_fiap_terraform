@@ -3,6 +3,7 @@ module "network" {
 
   cluster_name = var.cluster_name
   aws_region   = var.aws_region
+  nat_type     = var.nat_type
 }
 
 module "master" {
@@ -25,14 +26,16 @@ module "nodes" {
   k8s_version  = var.k8s_version
 
   cluster_vpc       = module.network.cluster_vpc
-  private_subnet_1a = module.network.public_subnet_1a
-  private_subnet_1c = module.network.public_subnet_1c
+  private_subnet_1a = module.network.private_subnet_1a
+  # node_azs_single: 1c recebe a 1a e o modulo deduplica (distinct) -> node group numa AZ so
+  private_subnet_1c = var.node_azs_single ? module.network.private_subnet_1a : module.network.private_subnet_1c
 
   eks_cluster    = module.master.eks_cluster
   eks_cluster_sg = module.master.security_group
   #  clb_sg         = module.nlb.security_group
 
   nodes_instances_sizes = var.nodes_instances_sizes
+  node_ami_type         = var.node_ami_type
   auto_scale_options    = var.auto_scale_options
 
   auto_scale_cpu = var.auto_scale_cpu
@@ -50,7 +53,8 @@ module "rds_pedido" {
 
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
-  eks_sg_id          = module.master.security_group.id
+  eks_sg_id          = module.master.eks_cluster.vpc_config[0].cluster_security_group_id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-rds-pedido" })
 }
 
 module "rds_producao" {
@@ -65,11 +69,13 @@ module "rds_producao" {
 
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
-  eks_sg_id          = module.master.security_group.id
+  eks_sg_id          = module.master.eks_cluster.vpc_config[0].cluster_security_group_id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-rds-producao" })
 }
 
 module "documentdb_pagamento" {
   source = "./modules/documentdb"
+  count  = var.enable_documentdb ? 1 : 0
 
   identifier     = "${var.cluster_name}-pagamento"
   instance_class = var.documentdb_instance_class
@@ -77,11 +83,13 @@ module "documentdb_pagamento" {
 
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
-  eks_sg_id          = module.master.security_group.id
+  eks_sg_id          = module.master.eks_cluster.vpc_config[0].cluster_security_group_id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-documentdb-pagamento" })
 }
 
 module "mq_shared" {
   source = "./modules/mq"
+  count  = var.enable_mq ? 1 : 0
 
   identifier      = "${var.cluster_name}-mq"
   instance_type   = var.mq_instance_type
@@ -89,7 +97,8 @@ module "mq_shared" {
 
   cluster_vpc        = module.network.cluster_vpc
   private_subnet_ids = [module.network.private_subnet_1a.id, module.network.private_subnet_1c.id]
-  eks_sg_id          = module.master.security_group.id
+  eks_sg_id          = module.master.eks_cluster.vpc_config[0].cluster_security_group_id
+  tags               = merge(local.tags, { Name = "${var.cluster_name}-mq" })
 }
 
 module "ecr" {
@@ -106,9 +115,9 @@ module "github_oidc" {
     "pos_tech_fiap_pagamento"        = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_producao"         = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"] }
     "pos_tech_fiap_lambda"           = { policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSLambda_FullAccess"] }
-    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"] }
-    "pos_tech_fiap_db"               = { policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"] }
-    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"] }
+    "pos_tech_fiap_terraform"        = { policy_arns = ["arn:aws:iam::aws:policy/AWSCloudFormationFullAccess", "arn:aws:iam::aws:policy/AmazonEC2FullAccess", "arn:aws:iam::aws:policy/AmazonRDSFullAccess", "arn:aws:iam::aws:policy/AmazonVPCFullAccess", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser"] }
+    "pos_tech_fiap_db"               = { policy_arns = ["arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess", "arn:aws:iam::aws:policy/SecretsManagerReadWrite"] }
+    "pos_tech_fiap_lambda_terraform" = { policy_arns = ["arn:aws:iam::aws:policy/AWSLambda_FullAccess", "arn:aws:iam::aws:policy/AmazonAPIGatewayAdministrator", "arn:aws:iam::aws:policy/IAMFullAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser", "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser"] }
   }
 }
 
@@ -118,16 +127,17 @@ module "irsa_pedido" {
   service_name      = "pedido"
   oidc_provider_arn = module.master.oidc_provider_arn
   oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.rds_pedido.secret_arn, module.mq_shared.secret_arn]
+  secret_arns       = compact([module.rds_pedido.secret_arn, one(module.mq_shared[*].secret_arn)])
 }
 
 module "irsa_pagamento" {
   source = "./modules/irsa"
 
-  service_name      = "pagamento"
-  oidc_provider_arn = module.master.oidc_provider_arn
-  oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.documentdb_pagamento.secret_arn, module.mq_shared.secret_arn]
+  service_name          = "pagamento"
+  oidc_provider_arn     = module.master.oidc_provider_arn
+  oidc_provider_url     = module.master.oidc_provider_url
+  secret_arns           = compact([one(module.documentdb_pagamento[*].secret_arn), one(module.mq_shared[*].secret_arn)])
+  enable_secrets_access = var.enable_documentdb || var.enable_mq
 }
 
 module "irsa_producao" {
@@ -136,7 +146,7 @@ module "irsa_producao" {
   service_name      = "producao"
   oidc_provider_arn = module.master.oidc_provider_arn
   oidc_provider_url = module.master.oidc_provider_url
-  secret_arns       = [module.rds_producao.secret_arn, module.mq_shared.secret_arn]
+  secret_arns       = compact([module.rds_producao.secret_arn, one(module.mq_shared[*].secret_arn)])
 }
 
 #module "nlb" {

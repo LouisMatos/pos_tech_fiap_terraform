@@ -43,10 +43,13 @@ resource "aws_db_instance" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
   skip_final_snapshot    = !var.deletion_protection
   publicly_accessible    = false
+  storage_encrypted      = true
+  tags                   = var.tags
 }
 
 resource "aws_secretsmanager_secret" "this" {
-  name = "${var.identifier}-db-credentials"
+  name                    = "${var.identifier}-db-credentials"
+  recovery_window_in_days = 0 # destroy real, sem 30 dias de soft-delete - evita colisao de nome em destroy+redeploy de teste
 }
 
 resource "aws_secretsmanager_secret_version" "this" {

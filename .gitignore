@@ -32,3 +32,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+# Logs locais de deploy e state
+scripts/logs/
+state/

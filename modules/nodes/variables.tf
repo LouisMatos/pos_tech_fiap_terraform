@@ -24,3 +24,7 @@ variable "auto_scale_cpu" {}
 
 
 
+
+variable "node_ami_type" {
+  default = "AL2023_x86_64_STANDARD"
+}
