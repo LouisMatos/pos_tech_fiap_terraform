@@ -306,6 +306,7 @@ helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-contro
   --version "${LBC_CHART_VERSION}" \
   --namespace kube-system \
   --set clusterName="${CLUSTER_NAME}" \
+  --set replicaCount=1 \
   --set region="${REGION}" \
   --set vpcId="${VPC_ID}" \
   --set serviceAccount.create=true \
