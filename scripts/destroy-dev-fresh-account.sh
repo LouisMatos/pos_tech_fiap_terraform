@@ -2,7 +2,7 @@
 # Destrói o ambiente dev criado por deploy-dev-fresh-account.sh e
 # deploy-services-dev.sh, sem deixar órfão. Ordem:
 #   Ingress + LBC (o ALB sai antes da VPC) -> esvazia o ECR ->
-#   lambda_terraform -> db -> terraform -> budget -> log group da Lambda.
+#   lambda_terraform -> db -> terraform -> log group da Lambda.
 # Essencial rodar depois de testar, pra não deixar recursos cobrando.
 #
 # Uso:
@@ -39,7 +39,8 @@ ACCOUNT_ID="$(echo "${CALLER_IDENTITY}" | jq -r '.Account')"
 echo "Account ID: ${ACCOUNT_ID}"
 echo ""
 echo "Isso vai DESTRUIR todos os recursos dev criados nos 3 repos Terraform"
-echo "(VPC, EKS, RDS, DynamoDB, Lambda, ECR, IAM roles) e o budget ${BUDGET_NAME}."
+echo "(VPC, EKS, RDS, DynamoDB, Lambda, ECR, IAM roles)."
+echo "O budget ${BUDGET_NAME} é mantido (alerta por e-mail)."
 echo ""
 read -r -p "Digite 'destroy' pra confirmar: " CONFIRM
 [[ "${CONFIRM}" == "destroy" ]] || die "Abortado: texto de confirmação não bateu."
@@ -100,10 +101,7 @@ terraform init -input=false -reconfigure
 terraform destroy -var-file=envs/dev.tfvars -auto-approve
 
 # --- 6. Órfãos fora do Terraform ----------------------------------------------
-log "Removendo budget e log group da Lambda"
-
-aws budgets delete-budget --account-id "${ACCOUNT_ID}" --budget-name "${BUDGET_NAME}" \
-  || warn "Budget ${BUDGET_NAME} não removido (talvez não exista)."
+log "Removendo log group da Lambda"
 
 # A Lambda cria o log group na 1ª invocação; sem log group no Terraform ele sobra.
 aws logs delete-log-group --region "${REGION}" --log-group-name "${LAMBDA_LOG_GROUP}" 2>/dev/null \
